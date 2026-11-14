@@ -11,7 +11,7 @@ GROUPS = {
     "russell2000": ["^RUT", "IWM", "TNA", "TZA"],
 }
  
-LEVELS = ["^VIX", "^VXN", "^RVX", "^GVZ", "^IRX"]
+LEVELS = ["^VIX", "^VXN", "^GVZ", "^IRX"]
  
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
  
@@ -46,10 +46,16 @@ def main():
     df = pd.concat(frames)
     df["snapshot_date"] = today
     df.to_csv(os.path.join(OUT, f"options_{today}.csv.gz"), index=False)
-    levels = pd.DataFrame([
-        {"ticker": t, "value": yf.Ticker(t).fast_info["last_price"]}
-        for t in LEVELS
-    ])
+    rows = []
+    for t in LEVELS:
+        try:
+            rows.append({
+                "ticker": t,
+                "value": yf.Ticker(t).fast_info["last_price"],
+            })
+        except Exception as e:
+            print(t, e)
+    levels = pd.DataFrame(rows)
     levels["snapshot_date"] = today
     levels.to_csv(os.path.join(OUT, f"levels_{today}.csv"), index=False)
  
